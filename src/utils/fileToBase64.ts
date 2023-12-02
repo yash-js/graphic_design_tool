@@ -14,3 +14,12 @@ export default function fileToBase64(file: File): Promise<string | null> {
     };
   });
 }
+export function getBase64ImageUrl(img: any) {
+  var canvas = document.createElement('canvas');
+  canvas.width = img.width;
+  canvas.height = img.height;
+  var ctx: any = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+  var dataURL: any = canvas.toDataURL('image/png');
+  return dataURL.replace(/^data:image\/?[A-z]*;base64,/);
+}

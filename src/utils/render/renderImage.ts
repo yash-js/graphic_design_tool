@@ -14,6 +14,10 @@ export default function renderImage({
   context.globalAlpha = opacity / 100;
 
   if (imageElement) {
+    console.log('imageegeege', context, x, y, width, height, opacity, imageElement);
+    console.log('x, y', x, y, width, height, opacity, imageElement);
+    console.log('width', width, height, opacity, imageElement);
+    console.log('imageElement', height, opacity, imageElement);
     context.drawImage(imageElement, x, y, width, height);
   }
 

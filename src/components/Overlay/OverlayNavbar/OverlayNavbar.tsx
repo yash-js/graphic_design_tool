@@ -6,7 +6,7 @@ import { HiPencil } from 'react-icons/hi';
 import { RiImageLine } from 'react-icons/ri';
 import { RxText } from 'react-icons/rx';
 import styled from 'styled-components';
-
+import { GrTemplate } from "react-icons/gr";
 import type { UserMode } from '~/config/types';
 import useActiveObjectId from '~/store/useActiveObjectId';
 import useUserMode from '~/store/useUserMode';
@@ -88,6 +88,11 @@ const userModeButtonsSecondary: UserModeButton[] = [
   {
     mode: 'image',
     label: 'Image',
+    icon: <BsImageFill />,
+  },
+  {
+    mode: 'template',
+    label: 'Template',
     icon: <BsImageFill />,
   },
 ];

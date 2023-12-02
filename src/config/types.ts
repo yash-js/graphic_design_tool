@@ -14,7 +14,7 @@ export type ActionMode = null | {
   option: ActionModeOption | null;
 };
 
-type CanvasObjectType = 'rectangle' | 'ellipse' | 'free-draw' | 'line' | 'arrow' | 'text' | 'icon' | 'image';
+type CanvasObjectType = 'rectangle' | 'ellipse' | 'free-draw' | 'line' | 'arrow' | 'text' | 'icon' | 'image' | 'template';
 
 export type UserMode = 'select' | CanvasObjectType;
 

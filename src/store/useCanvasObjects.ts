@@ -59,6 +59,7 @@ const useCanvasObjects = create<{
   appendIconObject: (icon: Omit<IconObject, 'type'>) => void;
   appendImageObject: (icon: Omit<ImageObject, 'type'>) => void;
   updateCanvasObject: (id: string, object: Partial<CanvasObject>) => void;
+  setCanvasObject: (object: Partial<CanvasObject>) => void;
   appendFreeDrawPointToCanvasObject: (id: string, point: { x: number; y: number }) => void;
   deleteCanvasObject: (id: string) => void;
   moveCanvasObject: (params: {
@@ -150,9 +151,15 @@ const useCanvasObjects = create<{
     })),
   updateCanvasObject: (id, partialObject) =>
     set((state) => ({
-      canvasObjects: state.canvasObjects.map((existing) =>
-        existing.id === id ? curateObjectModifications({ ...existing, ...partialObject }, existing) : existing
-      ),
+      canvasObjects: state.canvasObjects.map((existing) => {
+        console.log('existing', existing);
+        return existing.id === id ? curateObjectModifications({ ...existing, ...partialObject }, existing) : existing;
+      }),
+    })),
+
+  setCanvasObject: (obj: any) =>
+    set((state) => ({
+      canvasObjects: obj.map((data: any) => data),
     })),
   appendFreeDrawPointToCanvasObject(id, point) {
     set((state) => {

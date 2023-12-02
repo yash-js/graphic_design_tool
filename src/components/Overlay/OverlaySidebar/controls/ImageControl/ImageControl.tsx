@@ -119,10 +119,12 @@ export default function ImageControl({ pageSize = 60 }: Props) {
 
   const commonPushImageObject = async (url: string) => {
     const imageElement = await getImageElementFromUrl(url);
+    console.log('imageElement', imageElement)
     const dimensions = await getDimensionsFromImage({
       context: contextRef?.current,
       imageObject: { x: 0, y: 0, imageElement },
     });
+    console.log('DIMENSIONS', dimensions)
     pushImageObject({ imageUrl: url, imageElement, dimensions });
   };
 

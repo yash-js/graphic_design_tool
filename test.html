@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Canvas to JSON</title>
+  <style>
+    canvas {
+      border: 1px solid black;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="myCanvas" width="400" height="200"></canvas>
+  <button onclick="exportToJson()">Export to JSON</button>
+
+  <script>
+    var canvas = document.getElementById("myCanvas");
+    var ctx = canvas.getContext("2d");
+
+    var imageUrl = "https://images.unsplash.com/photo-1682687980976-fec0915c6177?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDF8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"; // URL of the image
+    // var proxyUrl = "proxy?url=" + encodeURIComponent(imageUrl); // Proxy URL
+
+    var img = new Image();
+    img.crossOrigin = "Anonymous"; // Set the image to use CORS
+    img.onload = function () {
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      var texts = [
+        { content: "Happy 1st Birthday!", x: canvas.width / 2, y: canvas.height / 2, font: "20px Arial", color: "white", align: "center" },
+        { content: "Another text", x: canvas.width / 4, y: canvas.height / 4, font: "16px Arial", color: "red", align: "left" }
+        // Add more text objects as needed
+      ];
+
+      texts.forEach(textObj => {
+        ctx.font = textObj.font;
+        ctx.fillStyle = textObj.color;
+        ctx.textAlign = textObj.align;
+
+        var textWidth = ctx.measureText(textObj.content).width;
+        ctx.fillText(textObj.content, textObj.x - (textObj.align === 'center' ? textWidth / 2 : 0), textObj.y);
+
+        textObj.width = textWidth;
+        textObj.height = parseInt(textObj.font); // Assuming the font size is the height of the text
+      });
+
+      // Get image position and dimensions
+      var imageX = 0; // Image X position
+      var imageY = 0; // Image Y position
+      var imageWidth = canvas.width; // Image width (same as canvas in this case)
+      var imageHeight = canvas.height; // Image height (same as canvas in this case)
+
+      var jsonContent = {
+        canvas: {
+          width: canvas.width, // Save canvas width
+          height: canvas.height // Save canvas height
+        },
+        image: {
+          url: imageUrl, // Save image URL
+          position: {
+            x: imageX,
+            y: imageY
+          },
+          dimensions: {
+            width: imageWidth,
+            height: imageHeight
+          }
+        },
+        texts: texts, // Save multiple texts with positions and dimensions
+      };
+
+      var jsonString = JSON.stringify(jsonContent);
+      console.log(jsonString); // Display JSON content in the console
+      // You can perform further actions like sending this JSON data to a server or saving it as a file
+    };
+    img.src = imageUrl;
+    function exportToJson() {
+      var canvasData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+      var jsonContent = {
+        image: canvas.toDataURL(), // Convert canvas image to base64
+        text: "Happy 1st Birthday!", // Text content
+        font: "20px Arial", // Font information
+        textColor: "white", // Text color
+        textAlignment: "center" // Text alignment
+      };
+
+      var jsonString = JSON.stringify(jsonContent);
+      console.log(jsonString); // Display JSON content in the console
+      // You can perform further actions like sending this JSON data to a server or saving it as a file
+    }
+  </script>
+</body>
+
+</html>

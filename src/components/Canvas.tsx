@@ -1,4 +1,5 @@
-import React, { useRef, type PointerEvent, type Touch, type TouchEvent } from 'react';
+import React, { useRef, type PointerEvent, useState, type Touch, type TouchEvent } from 'react';
+import { useEffect } from 'react';
 import styled from 'styled-components';
 
 import { TRANSPARENT_BACKGROUND_IMAGE } from '~/config/constants';
@@ -8,6 +9,7 @@ import type { ActionModeOption } from '~/config/types';
 import useCanvasContext from '~/context/useCanvasContext';
 import useActionMode from '~/store/useActionMode';
 import useActiveObjectId from '~/store/useActiveObjectId';
+import useCanvasElem from '~/store/useCanvasElem';
 import useCanvasObjects from '~/store/useCanvasObjects';
 import useCanvasWorkingSize from '~/store/useCanvasWorkingSize';
 import useDefaultParams from '~/store/useDefaultParams';
@@ -16,13 +18,16 @@ import useUserMode from '~/store/useUserMode';
 import useWindowSize from '~/store/useWindowSize';
 import useZoom from '~/store/useZoom';
 import theme from '~/theme';
+import { exportToJson } from '~/utils/exportJson';
 import generateUniqueId from '~/utils/generateUniqueId';
 import getControlPoints from '~/utils/getControlPoints';
 import getCursorFromModes from '~/utils/getCursorFromModes';
 import getDimensionsFromFreeDraw from '~/utils/getDimensionsFromFreeDraw';
+import getDimensionsFromImage from '~/utils/getDimensionsFromImage';
+import getImageElementFromUrl from '~/utils/getImageElementFromUrl';
 import getRelativeMousePositionOnCanvas from '~/utils/getRelativeMousePositionOnCanvas';
 import isCursorWithinRectangle from '~/utils/isCursorWithinRectangle';
-
+import UnsplashImageButton, { type OptionItem } from './Overlay/OverlaySidebar/controls/TempalteControl/UnsplashImageButton'
 const FixedMain = styled.main`
   position: fixed;
   top: 0;
@@ -39,9 +44,9 @@ type PointerOrTouchEvent = PointerEvent<HTMLElement> | TouchEvent<HTMLElement>;
 
 export default function Canvas() {
   const { canvasRef, contextRef, drawEverything } = useCanvasContext();
-
   const previousTouchRef = useRef<Touch | null>(null);
   const distanceBetweenTouchesRef = useRef<number>(0);
+  const { canvasElement, setCanvasElement } = useCanvasElem()
 
   const windowSize = useWindowSize((state) => state.windowSize);
 
@@ -54,6 +59,7 @@ export default function Canvas() {
   const appendFreeDrawObject = useCanvasObjects((state) => state.appendFreeDrawObject);
   const appendTextObject = useCanvasObjects((state) => state.appendTextObject);
   const updateCanvasObject = useCanvasObjects((state) => state.updateCanvasObject);
+  const setCanvasObject = useCanvasObjects((state) => state.setCanvasObject);
   const appendFreeDrawPointToCanvasObject = useCanvasObjects((state) => state.appendFreeDrawPointToCanvasObject);
   const moveCanvasObject = useCanvasObjects((state) => state.moveCanvasObject);
   const resizeCanvasObject = useCanvasObjects((state) => state.resizeCanvasObject);
@@ -77,11 +83,39 @@ export default function Canvas() {
   const zoom = useZoom((state) => state.zoom);
 
   const initialDrawingPositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [imageUrl, setImageUrl] = useState<string>('');
+  const appendImageObject = useCanvasObjects((state) => state.appendImageObject);
 
   const activeObject = canvasObjects.find((canvasObject) => canvasObject.id === activeObjectId);
-
+  const pushImageObject = async ({ imageUrl, imageElement, dimensions }: OptionItem) => {
+    setImageUrl(imageUrl);
+    const createdObjectId = generateUniqueId();
+    appendImageObject({
+      id: createdObjectId,
+      x: 0,
+      y: 0,
+      width: dimensions.width,
+      height: dimensions.height,
+      opacity: 100,
+      imageUrl,
+      imageElement,
+    });
+    setActiveObjectId(createdObjectId);
+    setUserMode('select');
+  };
+  // console.log('canvasRef', canvasRef)
   // On pointer down
+  const commonPushImageObject = async (url: string) => {
+    const imageElement = await getImageElementFromUrl(url);
+    console.log('IMAGGE', imageElement)
+    const dimensions = await getDimensionsFromImage({
+      context: contextRef?.current,
+      imageObject: { x: 0, y: 0, imageElement },
+    });
+    console.log('dimensions', dimensions)
+    return imageElement
 
+  };
   const onPointerDown = (event: PointerOrTouchEvent) => {
     event.preventDefault();
     const canvas = canvasRef.current;
@@ -287,15 +321,15 @@ export default function Canvas() {
       'movementX' in event
         ? event.movementX
         : previousTouchRef.current?.pageX
-        ? event.touches[0].pageX - previousTouchRef.current.pageX
-        : 0;
+          ? event.touches[0].pageX - previousTouchRef.current.pageX
+          : 0;
 
     const movementY =
       'movementY' in event
         ? event.movementY
         : previousTouchRef.current?.pageY
-        ? event.touches[0].pageY - previousTouchRef.current.pageY
-        : 0;
+          ? event.touches[0].pageY - previousTouchRef.current.pageY
+          : 0;
 
     if ('touches' in event) {
       previousTouchRef.current = event.touches[0];
@@ -421,7 +455,84 @@ export default function Canvas() {
       }
     }
   };
+  const showPreviews = async () => {
+    const jsonData = [
+      {
+        id: 1,
+        "canvas": { "width": 1915, "height": 2681 },
+        "image": {
+          "url": localStorage ? localStorage?.getItem("imageimage") : null
+          ,
+          "position": {},
+          "dimensions": { "width": 1915, "height": 2681 }
+        },
+        "texts": [
+          {
+            "content": "Happy 1st Birthday!",
+            "x": 957.5,
+            "y": 1340.5,
+            "font": "20px Arial",
+            "color": "white",
+            "align": "center",
+            "width": 174.53125,
+            "height": 20
+          }
+        ]
+      }];
+    const container = document.getElementById('imgContainer');
+    const currentObj = [{ "x": 599.0070921985815, "y": 263.1914893617021, "width": 200, "height": 100, "backgroundColorHex": "#000000", "strokeColorHex": "#000000", "strokeWidth": 1, "opacity": 100, "borderRadius": 0, "freeDrawPoints": [], "text": "TESTTTT", "textJustify": false, "textAlignHorizontal": "right", "textAlignVertical": "middle", "fontColorHex": "#ec0404", "fontSize": 197, "fontFamily": "sans-serif", "fontStyle": "italic", "fontVariant": "small-caps", "fontWeight": "bold", "fontLineHeightRatio": 1, "svgPath": "", "imageUrl": "", "imageElement": null, "type": "text", "id": "b4fb1f4d-05a7-439a-b1cb-9f85119156f1" }, { "x": 70.80851063829785, "y": 50.8368794326241, "width": 400, "height": 600, "backgroundColorHex": "#000000", "strokeColorHex": "#000000", "strokeWidth": 1, "opacity": 100, "borderRadius": 0, "freeDrawPoints": [], "text": "", "textJustify": false, "textAlignHorizontal": "center", "textAlignVertical": "middle", "fontColorHex": "#000000", "fontSize": 48, "fontFamily": "sans-serif", "fontStyle": "normal", "fontVariant": "normal", "fontWeight": "normal", "fontLineHeightRatio": 1, "svgPath": "", "imageUrl": "https://images.unsplash.com/photo-1545486332-9e0999c535b2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w1MzQ0NDN8MHwxfHNlYXJjaHwzfHxibGFja3xlbnwwfHx8fDE3MDE0MTI0OTN8MA&ixlib=rb-4.0.3&q=80&w=400", "imageElement": {}, "type": "image", "id": "093c040a-1ff0-4cea-9275-828208bcc211" }, { "x": 412.97872340425545, "y": 265.98581560283696, "width": 200, "height": 100, "backgroundColorHex": "#000000", "strokeColorHex": "#000000", "strokeWidth": 1, "opacity": 100, "borderRadius": 0, "freeDrawPoints": [], "text": "TESTTTT", "textJustify": false, "textAlignHorizontal": "right", "textAlignVertical": "middle", "fontColorHex": "#ec0404", "fontSize": 197, "fontFamily": "sans-serif", "fontStyle": "italic", "fontVariant": "small-caps", "fontWeight": "bold", "fontLineHeightRatio": 1, "svgPath": "", "imageUrl": "", "imageElement": null, "type": "text", "id": "93934a0c-33bb-47d7-8105-eba12fdb699d" }]
+    const imgEle = document.createElement('img')!;
+    if (imgEle) {
+      await currentObj.map(async (obj: any) => obj.imageElement = await commonPushImageObject(localStorage ? localStorage?.getItem("imageimage") : null))
+      // @ts-ignore
+      imgEle.src = localStorage ? localStorage?.getItem("imageimage") : null;
 
+      // @ts-ignore
+      imgEle.onclick = () => setCanvasObject(currentObj)
+      imgEle.style.width = '100%';
+      imgEle.style.border = '1px solid gray';
+      imgEle.style.padding = '10px';
+      imgEle.style.backgroundColor = 'white';
+      container?.appendChild(imgEle);
+    }
+    jsonData && jsonData.length && jsonData.forEach(async data => {
+
+      // @ts-ignore
+
+      // const ctx = canvas.getContext('2d');
+      // if (ctx) {
+      //   const img = new Image();
+      //   img.onload = function () {
+      //     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      data.texts.forEach((text: any) => {
+        // @ts-ignore
+        ;
+        console.log('text', text)
+
+      });
+      //     // Convert canvas to data URL
+      //     const dataURL = canvas.toDataURL();
+      //     // @ts-ignore
+      //     document.getElementById('previewImage').src = dataURL;
+      //   };
+      //   img.src = data.image.url;
+      //   return
+      // }
+      // return
+    });
+  };
+  useEffect(() => {
+    if (userMode == 'template') {
+      showPreviews()
+    }
+    return () => { }
+  }, [userMode])
+
+  useEffect(() => {
+    console.log("canvasObjects", canvasObjects)
+  }, [canvasObjects])
+
+  // imageData variable now contains the pixel data of the canvas
   return (
     <FixedMain
       id={APP_FIXED_MAIN_UNIQUE_ID}
@@ -473,7 +584,7 @@ export default function Canvas() {
         >
           {`${canvasWorkingSize.width} x ${canvasWorkingSize.height} px`}
         </h1>
-        <canvas ref={canvasRef} width={canvasWorkingSize.width} height={canvasWorkingSize.height} />
+        <canvas id='workingCanvas' ref={canvasRef} width={canvasWorkingSize.width} height={canvasWorkingSize.height} />
       </div>
     </FixedMain>
   );

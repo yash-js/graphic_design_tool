@@ -22,13 +22,13 @@ export default function FrameControl() {
   const updateCanvasObject = useCanvasObjects((state) => state.updateCanvasObject);
 
   const activeObject = canvasObjects.find((object) => object.id === activeObjectId);
-
+  console.log("ACTIVE", activeObject)
   const frameOptions: {
     label: string;
     value: number;
     onChange: (value: number) => void;
   }[] = activeObject
-    ? [
+      ? [
         {
           label: 'X',
           value: activeObject.x,
@@ -66,7 +66,7 @@ export default function FrameControl() {
           },
         },
       ]
-    : [];
+      : [];
 
   return (
     <>

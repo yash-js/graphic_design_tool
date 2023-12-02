@@ -63,6 +63,8 @@ export default function canvasDrawEverything({
         break;
       }
       case 'image': {
+        console.log('context', context);
+        console.log('OBJECT', object);
         renderImage({ context, ...object });
         break;
       }

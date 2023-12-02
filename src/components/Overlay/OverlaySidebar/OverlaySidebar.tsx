@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styled from 'styled-components';
 
 import useActionMode from '~/store/useActionMode';
@@ -19,6 +19,7 @@ import OpacityControl from './controls/OpacityControl';
 import StrokeColorControl from './controls/StrokeColorControl';
 import StrokeWidthControl from './controls/StrokeWidthControl';
 import TextControl from './controls/TextControl';
+import TemplateControl from './controls/TempalteControl/TemplateControl';
 
 const Aside = styled.aside`
   pointer-events: auto;
@@ -48,6 +49,7 @@ export default function OverlaySidebar() {
   const activeNodes: Record<string, boolean> = {
     icons: userMode === 'icon',
     images: userMode === 'image',
+    template: userMode == 'template',
     frame: !!activeObject,
     align: !!activeObject,
     backgroundColor: activeObject?.type === 'rectangle' || activeObject?.type === 'ellipse' || activeObject?.type === 'icon',
@@ -71,6 +73,7 @@ export default function OverlaySidebar() {
     return null;
   }
 
+
   return (
     <Aside>
       <div>
@@ -86,6 +89,7 @@ export default function OverlaySidebar() {
         {activeNodes.align && <AlignControl />}
         {activeNodes.layer && <LayerControl />}
         {activeNodes.actions && <ActionsControl />}
+        {activeNodes.template && <TemplateControl />}
       </div>
     </Aside>
   );
